@@ -1,0 +1,15 @@
+[package]
+name = "api"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
+anyhow = "1.0.100"
+axum = "0.8.8"
+clap = "4.5.54"
+elements = "0.26.1"
+hex = "0.4.3"
+serde = { version = "1", features = ["derive"] }
+tokio = {version = "1.49.0", features = ["full"]}
+simplicityhl = { git = "https://github.com/BlockstreamResearch/SimplicityHL" }
+base64 = "0.21"

@@ -3,4 +3,18 @@ name = "simplicity-unchained-web-proxy"
 version = "0.1.0"
 edition = "2024"
 
+[workspace]
+members = ["crates/api",]
+
 [dependencies]
+api = {path = "crates/api"}
+anyhow = "1.0.100"
+axum = "0.8.8"
+tokio = {version = "1.49.0", features = ["full"]}
+clap = { version = "4.5.54", features = ["derive"] }
+serde = {version = "1.0.228", features = ["derive"]}
+elements = "0.26.1"
+hex = "0.4.3"
+simplicityhl = { git = "https://github.com/BlockstreamResearch/SimplicityHL" }
+base64 = "0.21"
+config = "0.15.19"
