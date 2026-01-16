@@ -1,8 +1,9 @@
-use ::api::api::define_routes;
 use anyhow::Result;
-mod cli;
-use crate::cli::Cli;
 use clap::Parser;
+
+use crate::cli::Cli;
+use api::api::define_routes;
+mod cli;
 
 #[tokio::main]
 async fn main() -> Result<()> {

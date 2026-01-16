@@ -1,8 +1,10 @@
+use std::path::PathBuf;
+
 use anyhow::Result;
-use api::api::Config;
 use clap::Parser;
 use config::{Config as ConfigLoader, File};
-use std::path::PathBuf;
+
+use api::api::Config;
 
 #[derive(Parser, Debug)]
 #[command(version, about = "Simplicity Proxy Service")]
