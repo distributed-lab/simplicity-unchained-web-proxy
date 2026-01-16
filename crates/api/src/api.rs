@@ -215,7 +215,7 @@ pub struct CompileResponse {
     pub hex: String,
 }
 
-pub async fn compile_handler(
+pub async fn convert_handler(
     Json(script): Json<CompileRequest>,
 ) -> Result<Json<CompileResponse>, (StatusCode, String)> {
     let result = parse_human_readable(&script.script);
@@ -247,7 +247,7 @@ pub struct CompileResponseHl {
     pub witness_base64: Option<String>,
 }
 
-pub async fn convert_handler(
+pub async fn compile_handler(
     Json(req): Json<CompileRequestHl>,
 ) -> Result<Json<CompileResponseHl>, (StatusCode, String)> {
     let script = req.script;
