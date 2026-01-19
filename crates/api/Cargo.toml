@@ -11,5 +11,5 @@ elements = "0.26.1"
 hex = "0.4.3"
 serde = { version = "1", features = ["derive"] }
 tokio = {version = "1.49.0", features = ["full"]}
-simplicityhl = { git = "https://github.com/BlockstreamResearch/SimplicityHL" }
+simplicityhl = { git = "https://github.com/ivanlele/SimplicityHL.git" }
 base64 = "0.21"
