@@ -15,7 +15,7 @@ Compiles a source script into a base64 encoded program.
 
 #### Request
 ```bash
-curl -X POST http://localhost:3000/compile \
+curl -X POST http://localhost:3000/simplicity-unchained-web-proxy-demo/compile \
   -H "Content-Type: application/json" \
   -d '{
     "script": "fn main() { assert!(true); }",
