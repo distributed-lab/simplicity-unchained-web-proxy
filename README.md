@@ -51,7 +51,8 @@ curl -X POST http://localhost:3000/simplicity-unchained-web-proxy-demo/convert \
 ```json
 {
   "hex":"527eae",
-  "address":"tex1q6fqu642lyhu2g6ly0jzlsx36h5erh3f4y2hl9qv3eu6nspjhypjq5hlq4x"}
+  "address":"tex1q6fqu642lyhu2g6ly0jzlsx36h5erh3f4y2hl9qv3eu6nspjhypjq5hlq4x"
+}
 ```
 
 ---
