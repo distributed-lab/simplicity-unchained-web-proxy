@@ -15,6 +15,6 @@ clap = { version = "4.5.54", features = ["derive"] }
 serde = {version = "1.0.228", features = ["derive"]}
 elements = "0.26.1"
 hex = "0.4.3"
-simplicityhl = { git = "https://github.com/BlockstreamResearch/SimplicityHL" }
+simplicityhl = { git = "https://github.com/ivanlele/SimplicityHL.git", rev = "a006405cc5102f2ed9c8d4d4ddf4bfeea48aadb6" }
 base64 = "0.21"
 config = "0.15.19"

@@ -104,10 +104,6 @@ fn fetch_tx_output(txid: &str, vout: u32, network: &str) -> Result<TxOut> {
             Err(e) => {
                 last_error = Some(e);
                 if attempt < MAX_RETRIES {
-                    eprintln!(
-                        "Attempt {}/{} failed, retrying in {} seconds...",
-                        attempt, MAX_RETRIES, RETRY_DELAY_SECS
-                    );
                     thread::sleep(Duration::from_secs(RETRY_DELAY_SECS));
                 }
             }

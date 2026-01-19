@@ -8,6 +8,7 @@ use elements::{Address, AddressParams, script::Builder};
 #[derive(Deserialize)]
 pub struct CompileRequest {
     pub script: String,
+    pub network: String,
 }
 
 #[derive(Serialize)]
@@ -19,7 +20,7 @@ pub struct CompileResponse {
 pub async fn convert_handler(
     Json(script): Json<CompileRequest>,
 ) -> Result<Json<CompileResponse>, (StatusCode, String)> {
-    let result = parse_human_readable(&script.script);
+    let result = parse_human_readable(&script.script, script.network);
 
     match result {
         Ok((script, address)) => Ok(Json(CompileResponse {
@@ -30,7 +31,7 @@ pub async fn convert_handler(
     }
 }
 
-pub fn parse_human_readable(input: &str) -> Result<(Vec<u8>, String)> {
+pub fn parse_human_readable(input: &str, network: String) -> Result<(Vec<u8>, String)> {
     let mut builder = Builder::new();
 
     let mut expected_len: Option<usize> = None;
@@ -216,7 +217,14 @@ pub fn parse_human_readable(input: &str) -> Result<(Vec<u8>, String)> {
 
     let script = builder.into_script();
 
-    let address = Address::p2wsh(&script, None, &AddressParams::ELEMENTS);
+    let address_params = match network.as_str() {
+        "liquid" => &AddressParams::LIQUID,
+        "liquid_testnet" => &AddressParams::LIQUID_TESTNET,
+        "elements" => &AddressParams::ELEMENTS,
+        _ => return Err(anyhow!("Unexpected network")),
+    };
+
+    let address = Address::p2wsh(&script, None, address_params);
 
     Ok((script.into_bytes(), address.to_string()))
 }
@@ -225,7 +233,7 @@ pub fn parse_human_readable(input: &str) -> Result<(Vec<u8>, String)> {
 fn test_elements_specific_opcode() -> Result<()> {
     let input = "OP_PUSHNUM_2 OP_CAT OP_PUSHBYTES_3 010203 OP_CHECKMULTISIG";
 
-    let result = parse_human_readable(input)?;
+    let result = parse_human_readable(input, "elements".to_string())?;
 
     let expected_hex = "527e03010203ae";
 

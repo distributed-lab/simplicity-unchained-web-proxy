@@ -134,7 +134,5 @@ pub fn execute(pset_hex: &str) -> Result<serde_json::Value> {
         "witnesses": witnesses
     });
 
-    println!("{}", serde_json::to_string_pretty(&output)?);
-
     Ok(output)
 }

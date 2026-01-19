@@ -17,12 +17,30 @@ pub struct Config {
 
 pub async fn define_routes(config: Config) -> Result<()> {
     let router = Router::new()
-        .route("/compile", post(compile_handler))
-        .route("/convert", post(convert_handler))
-        .route("/create-pset", post(create_pset_handler))
-        .route("/sign-pset", post(sign_pset_handler))
-        .route("/finalize", post(finalize_handler))
-        .route("/generate", post(generate_keypair_handler));
+        .route(
+            "/simplicity-unchained-web-proxy-demo/compile",
+            post(compile_handler),
+        )
+        .route(
+            "/simplicity-unchained-web-proxy-demo/convert",
+            post(convert_handler),
+        )
+        .route(
+            "/simplicity-unchained-web-proxy-demo/create-pset",
+            post(create_pset_handler),
+        )
+        .route(
+            "/simplicity-unchained-web-proxy-demo/sign-pset",
+            post(sign_pset_handler),
+        )
+        .route(
+            "/simplicity-unchained-web-proxy-demo/finalize",
+            post(finalize_handler),
+        )
+        .route(
+            "/simplicity-unchained-web-proxy-demo/generate",
+            post(generate_keypair_handler),
+        );
 
     let addr_str = format!("{}:{}", config.host, config.port);
     let addr: SocketAddr = addr_str
