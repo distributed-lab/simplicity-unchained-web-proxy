@@ -150,6 +150,29 @@ curl -s -X POST "http://localhost:3000/simplicity-unchained-web-proxy-demo/final
 }
 ```
 
+---
+
+### Generate Keypair
+Generates a random secp256k1 keypair (Secret Key and Compressed Public Key).
+
+**Endpoint:** `POST /simplicity-unchained-web-proxy-demo/generate`
+
+#### Request
+```bash
+curl -X POST http://localhost:3000/simplicity-unchained-web-proxy-demo/generate \
+   -H "Content-Type: application/json" \
+   -d '{}'
+```
+
+### Response
+```
+{
+  "compressed": true,
+  "public_key": "03db8804e872ee79bb2b8b014f60530c448eaa108cb2582794a817e9d30aaf21ff",
+  "secret_key": "777427aa93677f5e3e31edc8137884162593bb796e6eb84f99fb0c92dbb8e993"
+}
+```
+
 ### 2. CLI (Command Line Interface)
 
 The application is launched via the command line, allowing configuration of the server's listening address.
