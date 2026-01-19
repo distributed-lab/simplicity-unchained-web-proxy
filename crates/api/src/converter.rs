@@ -3,7 +3,7 @@ use axum::{extract::Json, http::StatusCode};
 use serde::{Deserialize, Serialize};
 
 use elements::opcodes::all;
-use elements::script::Builder;
+use elements::{Address, AddressParams, script::Builder};
 
 #[derive(Deserialize)]
 pub struct CompileRequest {
@@ -13,6 +13,7 @@ pub struct CompileRequest {
 #[derive(Serialize)]
 pub struct CompileResponse {
     pub hex: String,
+    pub address: String,
 }
 
 pub async fn convert_handler(
@@ -21,14 +22,15 @@ pub async fn convert_handler(
     let result = parse_human_readable(&script.script);
 
     match result {
-        Ok(script) => Ok(Json(CompileResponse {
+        Ok((script, address)) => Ok(Json(CompileResponse {
             hex: hex::encode(script),
+            address,
         })),
         Err(_) => Err((StatusCode::BAD_REQUEST, "Invalid script".to_string())),
     }
 }
 
-pub fn parse_human_readable(input: &str) -> Result<Vec<u8>> {
+pub fn parse_human_readable(input: &str) -> Result<(Vec<u8>, String)> {
     let mut builder = Builder::new();
 
     let mut expected_len: Option<usize> = None;
@@ -212,7 +214,11 @@ pub fn parse_human_readable(input: &str) -> Result<Vec<u8>> {
         builder = builder.push_opcode(op);
     }
 
-    Ok(builder.into_script().into_bytes())
+    let script = builder.into_script();
+
+    let address = Address::p2wsh(&script, None, &AddressParams::ELEMENTS);
+
+    Ok((script.into_bytes(), address.to_string()))
 }
 
 #[test]
@@ -223,6 +229,6 @@ fn test_elements_specific_opcode() -> Result<()> {
 
     let expected_hex = "527e03010203ae";
 
-    assert_eq!(hex::encode(result), expected_hex);
+    assert_eq!(hex::encode(result.1), expected_hex);
     Ok(())
 }

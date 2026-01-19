@@ -4,7 +4,10 @@ use anyhow::{Context, Result};
 use axum::{Router, routing::post};
 use serde::Deserialize;
 
-use crate::{compiler::compile_handler, converter::convert_handler};
+use crate::{
+    compiler::compile_handler, converter::convert_handler, create::create_pset_handler,
+    finilize::finalize_handler, generate::generate_keypair_handler, sign::sign_pset_handler,
+};
 
 #[derive(Debug, Deserialize, Clone)]
 pub struct Config {
@@ -15,7 +18,11 @@ pub struct Config {
 pub async fn define_routes(config: Config) -> Result<()> {
     let router = Router::new()
         .route("/compile", post(compile_handler))
-        .route("/convert", post(convert_handler));
+        .route("/convert", post(convert_handler))
+        .route("/create-pset", post(create_pset_handler))
+        .route("/sign-pset", post(sign_pset_handler))
+        .route("/finalize", post(finalize_handler))
+        .route("/generate", post(generate_keypair_handler));
 
     let addr_str = format!("{}:{}", config.host, config.port);
     let addr: SocketAddr = addr_str
