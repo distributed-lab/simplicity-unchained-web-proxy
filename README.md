@@ -42,16 +42,16 @@ Converts human-readable Bitcoin Script opcodes into a hex string.
 curl -X POST http://localhost:3000/simplicity-unchained-web-proxy-demo/convert \
    -H "Content-Type: application/json" \
    -d '{
-     "script": "OP_PUSHNUM_2 OP_CAT OP_CHECKMULTISIG"
+     "script": "OP_PUSHNUM_2 OP_CAT OP_CHECKMULTISIG",
+     "network": "liquid_testnet"
    }'
 ```
 
 #### Response
 ```json
 {
-  "hex": "527eae",
-  "address": "tlq1qq2g07nju42l0nlx0erqa3wsel2l8prnq96rlnhml262mcj7pe8w6ndvvyg237japt83z24m8gu4v3yfhaqvrqxydadc9scsmw"
-}
+  "hex":"527eae",
+  "address":"tex1q6fqu642lyhu2g6ly0jzlsx36h5erh3f4y2hl9qv3eu6nspjhypjq5hlq4x"}
 ```
 
 ---
