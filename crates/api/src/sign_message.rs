@@ -34,20 +34,12 @@ pub fn execute_sign_hex(message: &str, secret_key_hex: &str) -> Result<serde_jso
 
     let mut hasher = Sha256::new();
     hasher.update(message);
-    let digest_hex = hex::encode(hasher.finalize());
 
-    let digest_bytes = hex::decode(&digest_hex).context("Failed to decode digest hex")?;
-    if digest_bytes.len() != 32 {
-        return Err(anyhow::anyhow!(
-            "Digest must be exactly 32 bytes for secp256k1 Message, got {} bytes",
-            digest_bytes.len()
-        ));
-    }
-    let mut digest_arr = [0u8; 32];
-    digest_arr.copy_from_slice(&digest_bytes);
+    let digest_bytes = hasher.finalize();
+    let digest_hex = hex::encode(digest_bytes);
 
     let secp = Secp256k1::new();
-    let msg = Message::from_digest(digest_arr);
+    let msg = Message::from_digest(digest_bytes.into());
     let signature = secp.sign_ecdsa(&msg, &secret_key);
 
     let sig_bytes = signature.serialize_der().to_vec();
