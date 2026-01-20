@@ -7,16 +7,17 @@ use elements::{
 use serde::Deserialize;
 use serde_json::Value;
 use serde_json::json;
+use sha2::{Digest, Sha256};
 #[derive(Deserialize)]
 pub struct SignHexRequest {
-    pub digest_hex: String,
+    pub message: String,
     pub secret_key_hex: String,
 }
 
 pub async fn sign_hex_handler(
     Json(payload): Json<SignHexRequest>,
 ) -> Result<Json<Value>, (StatusCode, String)> {
-    let result = execute_sign_hex(&payload.digest_hex, &payload.secret_key_hex);
+    let result = execute_sign_hex(&payload.message, &payload.secret_key_hex);
 
     match result {
         Ok(output) => Ok(Json(output)),
@@ -24,12 +25,18 @@ pub async fn sign_hex_handler(
     }
 }
 
-pub fn execute_sign_hex(digest_hex: &str, secret_key_hex: &str) -> Result<serde_json::Value> {
+pub fn execute_sign_hex(message: &str, secret_key_hex: &str) -> Result<serde_json::Value> {
     let secret_key_bytes =
         hex::decode(secret_key_hex).context("Failed to decode secret key hex")?;
     let secret_key = SecretKey::from_slice(&secret_key_bytes).context("Invalid secret key")?;
 
-    let digest_bytes = hex::decode(digest_hex).context("Failed to decode digest hex")?;
+    let message = hex::decode(message)?;
+
+    let mut hasher = Sha256::new();
+    hasher.update(message);
+    let digest_hex = hex::encode(hasher.finalize());
+
+    let digest_bytes = hex::decode(&digest_hex).context("Failed to decode digest hex")?;
     if digest_bytes.len() != 32 {
         return Err(anyhow::anyhow!(
             "Digest must be exactly 32 bytes for secp256k1 Message, got {} bytes",

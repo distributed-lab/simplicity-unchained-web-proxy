@@ -99,6 +99,7 @@ dependencies = [
  "reqwest",
  "serde",
  "serde_json",
+ "sha2",
  "simplicity-lang",
  "simplicityhl",
  "tokio",
