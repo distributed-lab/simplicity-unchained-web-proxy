@@ -175,6 +175,32 @@ curl -X POST http://localhost:3000/simplicity-unchained-web-proxy-demo/generate 
 }
 ```
 
+---
+
+### Sign message
+Signs a received hex.
+
+**Endpoint:** `POST /simplicity-unchained-web-proxy-demo/sign_message`
+
+#### Request
+```bash
+curl -X POST http://localhost:3000/simplicity-unchained-web-proxy-demo/sign_message \
+  -H "Content-Type: application/json" \
+  -d '{
+    "digest_hex": "5e884898da28047151d0e56f8dc6292773603d0d6aabbdd62a11ef721d1542d8",
+    "secret_key_hex": "0000000000000000000000000000000000000000000000000000000000000001"
+  }'
+```
+
+#### Response
+```json
+{
+  "digest_hex":"5e884898da28047151d0e56f8dc6292773603d0d6aabbdd62a11ef721d1542d8",
+  "public_key_hex":"0279be667ef9dcbbac55a06295ce870b07029bfcdb2dce28d959f2815b16f81798",
+  "signature_hex":"3045022100b9bd37c202d27f5b3aac350de8020c0bd1dd9b7fae368e344b860ae7be853dac02203e6f312443f9eabd3bd51861af7e31b931d7e58412f740e1328af60cd72908e8"
+}  
+```
+
 ### 2. CLI (Command Line Interface)
 
 The application is launched via the command line, allowing configuration of the server's listening address.

@@ -7,6 +7,7 @@ use serde::Deserialize;
 use crate::{
     compiler::compile_handler, converter::convert_handler, create::create_pset_handler,
     finilize::finalize_handler, generate::generate_keypair_handler, sign::sign_pset_handler,
+    sign_message::sign_hex_handler,
 };
 
 #[derive(Debug, Deserialize, Clone)]
@@ -40,6 +41,10 @@ pub async fn define_routes(config: Config) -> Result<()> {
         .route(
             "/simplicity-unchained-web-proxy-demo/generate",
             post(generate_keypair_handler),
+        )
+        .route(
+            "/simplicity-unchained-web-proxy-demo/sign_message",
+            post(sign_hex_handler),
         );
 
     let addr_str = format!("{}:{}", config.host, config.port);
