@@ -2,6 +2,7 @@ use anyhow::{Context, Result};
 use axum::{Json, http::StatusCode};
 use elements::{
     bitcoin::PublicKey,
+    schnorr::Keypair,
     secp256k1_zkp::{Message, Secp256k1, SecretKey},
 };
 use serde::Deserialize;
@@ -39,7 +40,7 @@ pub fn execute_sign_hex(message: &str, secret_key_hex: &str) -> Result<serde_jso
 
     let secp = Secp256k1::new();
     let msg = Message::from_digest(digest_bytes.into());
-    let signature = secp.sign_ecdsa(&msg, &secret_key);
+    let signature = secp.sign_schnorr(&msg, &Keypair::from_secret_key(&secp, &secret_key));
 
     let public_key = PublicKey::from_private_key(
         &secp,
@@ -51,7 +52,7 @@ pub fn execute_sign_hex(message: &str, secret_key_hex: &str) -> Result<serde_jso
     );
 
     let digest_hex = hex::encode(digest_bytes);
-    let sig_bytes = signature.serialize_compact().to_vec();
+    let sig_bytes = signature.serialize().to_vec();
 
     let output = json!({
         "signature_hex": hex::encode(&sig_bytes),
