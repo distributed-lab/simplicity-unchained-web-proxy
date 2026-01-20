@@ -26,7 +26,8 @@ curl -X POST http://localhost:3000/simplicity-unchained-web-proxy-demo/compile \
 #### Response
 ```json
 {
-  "program_base64": "0pkEYBAmKDgU"
+  "program_base64": "0pkEYBAmKDgU",
+  "cmr":"a61f806cc2ec60a7d668fa3bac0e3e6e935700ddd690c9c985e5fac1afa2f130"
 }
 ```
 
