@@ -94,13 +94,11 @@ dependencies = [
  "base64 0.21.7",
  "clap 4.5.54",
  "elements 0.26.1",
- "hal-simplicity",
  "hex 0.4.3",
  "reqwest",
  "serde",
  "serde_json",
  "sha2",
- "simplicity-lang",
  "simplicityhl",
  "tokio",
 ]

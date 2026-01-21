@@ -15,6 +15,4 @@ simplicityhl = { git = "https://github.com/ivanlele/SimplicityHL.git", rev = "a0
 base64 = "0.21"
 serde_json = "1.0.149"
 reqwest = { version = "0.13.1", features = ["blocking", "json"] }
-simplicity = { package = "simplicity-lang", version = "0.7.0", features = [ "base64", "serde" ] }
-hal-simplicity = "0.2.0"
 sha2 = "0.10.9"
