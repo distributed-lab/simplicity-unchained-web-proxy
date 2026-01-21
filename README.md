@@ -15,7 +15,7 @@ Compiles a source script into a base64 encoded program.
 
 #### Request
 ```bash
-curl -X POST http://localhost:3000/simplicity-unchained-web-proxy-demo/compile \
+curl -X POST http://localhost:3001/simplicity-unchained-web-proxy-demo/compile \
   -H "Content-Type: application/json" \
   -d '{
     "script": "fn sha2(string: u256) -> u256 { let hasher: Ctx8 = jet::sha_256_ctx_8_init(); let hasher: Ctx8 = jet::sha_256_ctx_8_add_32(hasher, string); jet::sha_256_ctx_8_finalize(hasher) } fn main() { let pk: Pubkey = witness::PK; let expected_pk_hash: u256 = 0x132f39a98c31baaddba6525f5d43f2954472097fa15265f45130bfdb70e51def; let pk_hash: u256 = sha2(pk); assert!(jet::eq_256(pk_hash, expected_pk_hash)); let msg: u256 = jet::sig_all_hash(); jet::bip_0340_verify((pk, msg), witness::SIG) }",
@@ -50,7 +50,7 @@ Converts human-readable Bitcoin Script opcodes into a hex string.
 
 #### Request
 ```bash
-curl -X POST http://localhost:3000/simplicity-unchained-web-proxy-demo/convert \
+curl -X POST http://localhost:3001/simplicity-unchained-web-proxy-demo/convert \
    -H "Content-Type: application/json" \
    -d '{
      "script": "OP_PUSHNUM_2 OP_CAT OP_CHECKMULTISIG",
@@ -75,7 +75,7 @@ Constructs an unsigned Partially Signed Elements Transaction (PSET). This endpoi
 
 #### Request
 ```bash
-curl -s -X POST "http://localhost:3000/simplicity-unchained-web-proxy-demo/create-pset" \
+curl -s -X POST "http://localhost:3001/simplicity-unchained-web-proxy-demo/create-pset" \
   -H "Content-Type: application/json" \
   -d '{
   "inputs": [
@@ -109,7 +109,7 @@ Signs a PSET input with a private key. This endpoint calculates the SegWit v0 si
 
 #### Request
 ```bash
-curl -s -X POST "http://localhost:3000/simplicity-unchained-web-proxy-demo/sign-pset" \
+curl -s -X POST "http://localhost:3001/simplicity-unchained-web-proxy-demo/sign-pset" \
   -H "Content-Type: application/json" \
   -d '{
   "pset_hex": "70736574ff0102040200000001030400000000010401010105010201fb04020000000001014e01499a818545f6bae39fc03b637f2a4e1e64e590cac1bc3a6f6d71aa4443654c140100000000000186a00022002044797b3c6ab4c6a96827a18046ea63571a13668b2c8dc84a82a55daf6dafcee601070001080100010e2045a122398dd5a6c52171788b566091504e33af66d3f90f02c3d5ac50209739f5010f0400000000011004ffffffff00010308b88201000000000007fc04707365740220499a818545f6bae39fc03b637f2a4e1e64e590cac1bc3a6f6d71aa4443654c14010422002044797b3c6ab4c6a96827a18046ea63571a13668b2c8dc84a82a55daf6dafcee600010308e80300000000000007fc04707365740220499a818545f6bae39fc03b637f2a4e1e64e590cac1bc3a6f6d71aa4443654c1401040000",
@@ -138,7 +138,7 @@ Takes a fully signed PSET, validates the signatures, and constructs the final wi
 
 #### Request
 ```bash
-curl -s -X POST "http://localhost:3000/simplicity-unchained-web-proxy-demo/finalize" \
+curl -s -X POST "http://localhost:3001/simplicity-unchained-web-proxy-demo/finalize" \
   -H "Content-Type: application/json" \
   -d '{
   "pset_hex": "70736574ff0102040200000001030400000000010401010105010201fb04020000000001014e01499a818545f6bae39fc03b637f2a4e1e64e590cac1bc3a6f6d71aa4443654c140100000000000186a00022002044797b3c6ab4c6a96827a18046ea63571a13668b2c8dc84a82a55daf6dafcee62202033523982d58e94be3b735731593f8225043880d53727235b566c515d24a0f7baf473044022030535235414d40273b6346e3ec140112ad1abd8e8dfdda45830f548c453a213b02205696cf8dd689c0789e10a48642e48da6cc8671ee4788f8ea0623960bc7204080012202034f355bdcb7cc0af728ef3cceb9615d90684bb5b2ca5f859ab0f0b704075871aa47304402207f6a25942703dfe84eb7ca826d40f2cdd3726ae54281e7d035ef0524bf37b545022074404b9cd4230c2483195670e4705c628e04d9132e6f1c403304dd8481d45a9e010105475221033523982d58e94be3b735731593f8225043880d53727235b566c515d24a0f7baf21034f355bdcb7cc0af728ef3cceb9615d90684bb5b2ca5f859ab0f0b704075871aa52ae01070001080100010e2045a122398dd5a6c52171788b566091504e33af66d3f90f02c3d5ac50209739f5010f0400000000011004ffffffff00010308b88201000000000007fc04707365740220499a818545f6bae39fc03b637f2a4e1e64e590cac1bc3a6f6d71aa4443654c14010422002044797b3c6ab4c6a96827a18046ea63571a13668b2c8dc84a82a55daf6dafcee600010308e80300000000000007fc04707365740220499a818545f6bae39fc03b637f2a4e1e64e590cac1bc3a6f6d71aa4443654c1401040000"
@@ -171,7 +171,7 @@ Generates a random secp256k1 keypair (Secret Key and Compressed Public Key).
 
 #### Request
 ```bash
-curl -X POST http://localhost:3000/simplicity-unchained-web-proxy-demo/generate \
+curl -X POST http://localhost:3001/simplicity-unchained-web-proxy-demo/generate \
    -H "Content-Type: application/json" \
    -d '{}'
 ```
@@ -194,7 +194,7 @@ Signs a received message hex.
 
 #### Request
 ```bash
-curl -X POST http://localhost:3000/simplicity-unchained-web-proxy-demo/sign_message \
+curl -X POST http://localhost:3001/simplicity-unchained-web-proxy-demo/sign_message \
   -H "Content-Type: application/json" \
   -d '{
     "message": "68656C6C6F",

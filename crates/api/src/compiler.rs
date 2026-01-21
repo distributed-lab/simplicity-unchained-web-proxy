@@ -51,43 +51,45 @@ pub async fn compile_handler(
     let compiled = simplicityhl::CompiledProgram::new(script, args, include_debug)
         .map_err(|e| (StatusCode::BAD_REQUEST, format!("compile error: {}", e)))?;
 
-    let raw_witness = req.witness.unwrap_or_default();
-    let mut converted_witness = HashMap::new();
-
-    for (key, value) in raw_witness {
-        let name = WitnessName::from_str_unchecked(key.as_str());
-        let value = Value::parse_from_str(
-            &value.value,
-            &ResolvedType::parse_from_str(value.type_.as_str()).map_err(|e| {
-                return (
-                    StatusCode::BAD_REQUEST,
-                    format!("value of witness is incorrect: {}", e),
-                );
-            })?,
-        )
-        .map_err(|e| {
-            return (
-                StatusCode::BAD_REQUEST,
-                format!("witness is incorrect: {}", e),
-            );
-        })?;
-
-        converted_witness.insert(name, value);
-    }
-
-    let witness = WitnessValues::from(converted_witness);
-
-    let satisfied = compiled
-        .satisfy(witness)
-        .map_err(|e| (StatusCode::BAD_REQUEST, format!("satisfy error: {}", e)))?;
-
-    let (program_bytes, witness_bytes) = satisfied.redeem().to_vec_with_witness();
+    let program_bytes = compiled.commit().to_vec_without_witness();
 
     let program_b64 = STANDARD.encode(&program_bytes);
-    let witness_b64 = if witness_bytes.is_empty() {
-        None
-    } else {
+
+    let witness_b64 = if let Some(witness) = req.witness {
+        let mut converted_witness = HashMap::new();
+
+        for (key, value) in witness {
+            let name = WitnessName::from_str_unchecked(key.as_str());
+            let value = Value::parse_from_str(
+                &value.value,
+                &ResolvedType::parse_from_str(value.type_.as_str()).map_err(|e| {
+                    return (
+                        StatusCode::BAD_REQUEST,
+                        format!("value of witness is incorrect: {}", e),
+                    );
+                })?,
+            )
+            .map_err(|e| {
+                return (
+                    StatusCode::BAD_REQUEST,
+                    format!("witness is incorrect: {}", e),
+                );
+            })?;
+
+            converted_witness.insert(name, value);
+        }
+
+        let witness = WitnessValues::from(converted_witness);
+
+        let satisfied = compiled
+            .satisfy(witness)
+            .map_err(|e| (StatusCode::BAD_REQUEST, format!("satisfy error: {}", e)))?;
+
+        let (_, witness_bytes) = satisfied.redeem().to_vec_with_witness();
+
         Some(STANDARD.encode(&witness_bytes))
+    } else {
+        None
     };
 
     Ok(Json(CompileResponseHl {
