@@ -18,17 +18,27 @@ Compiles a source script into a base64 encoded program.
 curl -X POST http://localhost:3000/simplicity-unchained-web-proxy-demo/compile \
   -H "Content-Type: application/json" \
   -d '{
-    "script": "fn main() { assert!(true); }",
-    "include_debug": false
+    "script": "fn sha2(string: u256) -> u256 { let hasher: Ctx8 = jet::sha_256_ctx_8_init(); let hasher: Ctx8 = jet::sha_256_ctx_8_add_32(hasher, string); jet::sha_256_ctx_8_finalize(hasher) } fn main() { let pk: Pubkey = witness::PK; let expected_pk_hash: u256 = 0x132f39a98c31baaddba6525f5d43f2954472097fa15265f45130bfdb70e51def; let pk_hash: u256 = sha2(pk); assert!(jet::eq_256(pk_hash, expected_pk_hash)); let msg: u256 = jet::sig_all_hash(); jet::bip_0340_verify((pk, msg), witness::SIG) }",
+    "include_debug": false,
+    "witness": {
+        "PK": {
+            "value": "0x79be667ef9dcbbac55a06295ce870b07029bfcdb2dce28d959f2815b16f81798",
+            "type": "Pubkey"
+        },
+        "SIG": {
+            "value": "0xf74b3ca574647f8595624b129324afa2f38b598a9c1c7cfc5f08a9c036ec5acd3c0fbb9ed3dae5ca23a0a65a34b5d6cccdd6ba248985d6041f7b21262b17af6f",
+            "type": "Signature"
+        }
+    }
   }'
 ```
 
 #### Response
 ```json
 {
-  "program_base64": "0pkEYBAmKDgU",
-  "cmr":"a61f806cc2ec60a7d668fa3bac0e3e6e935700ddd690c9c985e5fac1afa2f130"
-}
+  "program_base64":"47dAoTaRMvOamMMbqt26ZSX11D8pVEcgl/oVJl9FEwv9tw5R3vBCBQgw5OrIECZIMPpFGq5AhAoNo1YggGAG0DgRAoNwc3CDhVm3QCMAhPAQgUH4iONxMKHFGxgIBpC3j8aggHCgOMgOOAA=",
+  "witness_base64":"eb5mfvncu6xVoGKVzocLBwKb/NstzijZWfKBWxb4F5j3SzyldGR/hZViSxKTJK+i84tZipwcfPxfCKnANuxazTwPu57T2uXKI6CmWjS11szN1rokiYXWBB97ISYrF69v"
+}   
 ```
 
 ---

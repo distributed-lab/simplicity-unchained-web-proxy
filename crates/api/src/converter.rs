@@ -237,6 +237,6 @@ fn test_elements_specific_opcode() -> Result<()> {
 
     let expected_hex = "527e03010203ae";
 
-    assert_eq!(hex::encode(result.1), expected_hex);
+    assert_eq!(hex::encode(result.0), expected_hex);
     Ok(())
 }
