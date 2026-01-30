@@ -11,7 +11,7 @@ elements = "0.26.1"
 hex = "0.4.3"
 serde = { version = "1", features = ["derive"] }
 tokio = {version = "1.49.0", features = ["full"]}
-simplicityhl = { git = "https://github.com/ivanlele/SimplicityHL.git", rev = "a006405cc5102f2ed9c8d4d4ddf4bfeea48aadb6" }
+simplicityhl = { git = "https://github.com/ivanlele/SimplicityHL.git", rev = "55ae04e33768211a2bbb85543ed406bebb65ed15" }
 base64 = "0.21"
 serde_json = "1.0.149"
 reqwest = { version = "0.13.1", features = ["blocking", "json"] }

@@ -1,6 +1,6 @@
 # Simplicity Unchained Web Proxy
 
-This service provides an HTTP API to compile and convert Elements and Simplicity scripts. It is designed to be used alongside other Simplicity tools or as a standalone compiler service.
+This service provides an HTTP API to compile and convert Elements and Simplicity scripts, as well as manage Bitcoin and Elements transactions (PSBT/PSET). It is designed to be used alongside other Simplicity tools or as a standalone compiler service.
 
 ## Interfaces
 
@@ -9,17 +9,18 @@ The service exposes interactions primarily through a RESTful HTTP API and is con
 ## API Usage
 
 ### Compile Script
-Compiles a source script into a base64 encoded program.
+Compiles a Simplicity source script into a base64 encoded program. Supports both Elements and Bitcoin environments through the `environment` parameter.
 
 **Endpoint:** `POST /simplicity-unchained-web-proxy-demo/compile`
 
-#### Request
+#### Request (Elements Environment - Default)
 ```bash
 curl -X POST http://localhost:3001/simplicity-unchained-web-proxy-demo/compile \
   -H "Content-Type: application/json" \
   -d '{
     "script": "fn sha2(string: u256) -> u256 { let hasher: Ctx8 = jet::sha_256_ctx_8_init(); let hasher: Ctx8 = jet::sha_256_ctx_8_add_32(hasher, string); jet::sha_256_ctx_8_finalize(hasher) } fn main() { let pk: Pubkey = witness::PK; let expected_pk_hash: u256 = 0x132f39a98c31baaddba6525f5d43f2954472097fa15265f45130bfdb70e51def; let pk_hash: u256 = sha2(pk); assert!(jet::eq_256(pk_hash, expected_pk_hash)); let msg: u256 = jet::sig_all_hash(); jet::bip_0340_verify((pk, msg), witness::SIG) }",
     "include_debug": false,
+    "environment": "elements",
     "witness": {
         "PK": {
             "value": "0x79be667ef9dcbbac55a06295ce870b07029bfcdb2dce28d959f2815b16f81798",
@@ -41,14 +42,40 @@ curl -X POST http://localhost:3001/simplicity-unchained-web-proxy-demo/compile \
 }   
 ```
 
+#### Request (Bitcoin Environment)
+```bash
+curl -X POST http://localhost:3001/simplicity-unchained-web-proxy-demo/compile \
+  -H "Content-Type: application/json" \
+  -d '{
+    "script": "fn main() { assert!(true); }",
+    "include_debug": false,
+    "environment": "bitcoin",
+    "witness": {}
+  }'
+```
+
+#### Response
+```json
+{
+  "program_base64":"cHJvZ3JhbV9iYXNlNjRfZm9yX2JpdGNvaW4=",
+  "witness_base64": null
+}   
+```
+
+**Parameters:**
+- `script` (required): SimplicityHL source code
+- `environment` (optional): Either `"elements"` (default) or `"bitcoin"` - determines which jet set to use
+- `include_debug` (optional): Boolean flag to include debug symbols
+- `witness` (optional): Map of witness values with their types
+
 ---
 
 ### Convert Bitcoin Script
-Converts human-readable Bitcoin Script opcodes into a hex string.
+Converts human-readable Bitcoin Script opcodes into a hex string and generates a P2WSH address. Supports both Elements networks (elements, liquid, liquid_testnet) and Bitcoin networks (bitcoin, testnet, testnet4, signet, regtest).
 
 **Endpoint:** `POST /simplicity-unchained-web-proxy-demo/convert`
 
-#### Request
+#### Request (Elements Network)
 ```bash
 curl -X POST http://localhost:3001/simplicity-unchained-web-proxy-demo/convert \
    -H "Content-Type: application/json" \
@@ -66,9 +93,118 @@ curl -X POST http://localhost:3001/simplicity-unchained-web-proxy-demo/convert \
 }
 ```
 
+#### Request (Bitcoin Network)
+```bash
+curl -X POST http://localhost:3001/simplicity-unchained-web-proxy-demo/convert \
+   -H "Content-Type: application/json" \
+   -d '{
+     "script": "OP_PUSHNUM_2 OP_PUSHBYTES_33 033523982d58e94be3b735731593f8225043880d53727235b566c515d24a0f7baf OP_PUSHBYTES_33 034f355bdcb7cc0af728ef3cceb9615d90684bb5b2ca5f859ab0f0b704075871aa OP_PUSHNUM_2 OP_CHECKMULTISIG",
+     "network": "testnet"
+   }'
+```
+
+#### Response
+```json
+{
+  "hex":"5221033523982d58e94be3b735731593f8225043880d53727235b566c515d24a0f7baf21034f355bdcb7cc0af728ef3cceb9615d90684bb5b2ca5f859ab0f0b704075871aa52ae",
+  "address":"tb1qg3uhk0r2knr2j6p85xqyd6nr2udpxe5t9jxusj5z54w67md0emnqspc5zg"
+}
+```
+
 ---
 
-### Create PSET
+### Create PSBT (Bitcoin)
+Constructs an unsigned Partially Signed Bitcoin Transaction (PSBT). This endpoint automatically fetches the required Witness UTXO data for the inputs from the Blockstream or Mempool API. Supports Bitcoin mainnet, testnet, and testnet4.
+
+**Endpoint:** `POST /simplicity-unchained-web-proxy-demo/create-psbt`
+
+#### Request
+```bash
+curl -s -X POST "http://localhost:3001/simplicity-unchained-web-proxy-demo/create-psbt" \
+  -H "Content-Type: application/json" \
+  -d '{
+  "inputs": [
+    "a1b2c3d4e5f6a7b8c9d0e1f2a3b4c5d6e7f8a9b0c1d2e3f4a5b6c7d8e9f0a1b2:0"
+  ],
+  "outputs": [
+    "tb1qg3uhk0r2knr2j6p85xqyd6nr2udpxe5t9jxusj5z54w67md0emnqspc5zg:50000",
+    "tb1q...:45000"
+  ],
+  "network": "testnet4"
+}'
+```
+
+#### Response
+```json
+{
+  "inputs": 1,
+  "network": "testnet4",
+  "outputs": 2,
+  "psbt": "0x00"
+}
+```
+
+---
+
+### Sign PSBT (Bitcoin)
+Signs a Bitcoin PSBT input with a private key. This endpoint calculates the SegWit v0 sighash for the specified input, generates an ECDSA signature, and attaches it to the PSBT.
+
+**Endpoint:** `POST /simplicity-unchained-web-proxy-demo/sign-psbt`
+
+#### Request
+```bash
+curl -s -X POST "http://localhost:3001/simplicity-unchained-web-proxy-demo/sign-psbt" \
+  -H "Content-Type: application/json" \
+  -d '{
+  "psbt_hex": "cHNidP8BAH...",
+  "secret_key_hex": "804622cda0d8e634317a12651d91751ceff5c081f2b5f63ef7912725c7275e5d",
+  "input_index": 0,
+  "redeem_script_hex": "5221033523982d58e94be3b735731593f8225043880d53727235b566c515d24a0f7baf21034f355bdcb7cc0af728ef3cceb9615d90684bb5b2ca5f859ab0f0b704075871aa52ae"
+}'
+```
+
+#### Response
+```json
+{
+  "input_index": 0,
+  "partial_sigs_count": 1,
+  "psbt": "cHNidP8BAH...",
+  "public_key_hex": "033523982d58e94be3b735731593f8225043880d53727235b566c515d24a0f7baf",
+  "signature_hex": "3044..."
+}
+```
+
+---
+
+### Finalize PSBT (Bitcoin)
+Takes a fully signed Bitcoin PSBT, validates the signatures, and constructs the final witness data (specifically for 2-of-2 multisig inputs). It extracts the raw, broadcast-ready transaction hex.
+
+**Endpoint:** `POST /simplicity-unchained-web-proxy-demo/finalize-psbt`
+
+#### Request
+```bash
+curl -s -X POST "http://localhost:3001/simplicity-unchained-web-proxy-demo/finalize-psbt" \
+  -H "Content-Type: application/json" \
+  -d '{
+  "psbt_hex": "0x00"
+}'
+```
+
+#### Response
+```json
+{
+  "inputs": 1,
+  "locktime": 0,
+  "outputs": 2,
+  "transaction_hex": "02000000...",
+  "transaction_size": 234,
+  "version": 2,
+}
+```
+
+---
+
+### Create PSET (Elements)
 Constructs an unsigned Partially Signed Elements Transaction (PSET). This endpoint automatically fetches the required Witness UTXO data for the inputs from the Blockstream API.
 
 **Endpoint:** `POST /simplicity-unchained-web-proxy-demo/create-pset`
@@ -102,7 +238,7 @@ curl -s -X POST "http://localhost:3001/simplicity-unchained-web-proxy-demo/creat
 ```
 
 ---
-### Sign PSET
+### Sign PSET (Elements)
 Signs a PSET input with a private key. This endpoint calculates the SegWit v0 sighash for the specified input, generates an ECDSA signature, and attaches it to the PSET.
 
 **Endpoint:** `POST /simplicity-unchained-web-proxy-demo/sign-pset`
@@ -131,7 +267,7 @@ curl -s -X POST "http://localhost:3001/simplicity-unchained-web-proxy-demo/sign-
 
 ---
 
-### Finalize PSET
+### Finalize PSET (Elements)
 Takes a fully signed PSET, validates the signatures, and constructs the final witness data (specifically for 2-of-2 multisig inputs). It extracts the raw, broadcast-ready transaction hex.
 
 **Endpoint:** `POST /simplicity-unchained-web-proxy-demo/finalize`

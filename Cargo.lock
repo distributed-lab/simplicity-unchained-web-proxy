@@ -550,7 +550,7 @@ dependencies = [
 [[package]]
 name = "core"
 version = "0.1.0"
-source = "git+https://github.com/BlockstreamResearch/simplicity-unchained.git?rev=2cd4e7f60f8daa49f9e77ceba55397c9a1b44dd4#2cd4e7f60f8daa49f9e77ceba55397c9a1b44dd4"
+source = "git+https://github.com/ivanlele/simplicity-unchained.git?rev=5b8d5ece4d1f3eb8560662ade22a6d091f454c56#5b8d5ece4d1f3eb8560662ade22a6d091f454c56"
 dependencies = [
  "hal-simplicity",
  "hex 0.4.3",
@@ -2222,7 +2222,7 @@ dependencies = [
 [[package]]
 name = "simplicityhl"
 version = "0.4.0"
-source = "git+https://github.com/ivanlele/SimplicityHL.git?rev=a006405cc5102f2ed9c8d4d4ddf4bfeea48aadb6#a006405cc5102f2ed9c8d4d4ddf4bfeea48aadb6"
+source = "git+https://github.com/ivanlele/SimplicityHL.git?rev=55ae04e33768211a2bbb85543ed406bebb65ed15#55ae04e33768211a2bbb85543ed406bebb65ed15"
 dependencies = [
  "base64 0.21.7",
  "clap 4.5.54",

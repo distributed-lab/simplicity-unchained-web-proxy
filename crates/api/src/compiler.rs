@@ -7,8 +7,17 @@ use serde::{Deserialize, Serialize};
 use base64::engine::general_purpose::STANDARD;
 use base64::{self, Engine};
 use simplicityhl::parse::ParseFromStr;
+use simplicityhl::simplicity_unchained::jets::bitcoin::CoreExtension;
+use simplicityhl::simplicity_unchained::jets::elements::ElementsExtension;
 use simplicityhl::str::WitnessName;
 use simplicityhl::{ResolvedType, Value, WitnessValues};
+
+#[derive(Debug, Deserialize, Clone, Copy)]
+#[serde(rename_all = "lowercase")]
+pub enum Environment {
+    Elements,
+    Bitcoin,
+}
 
 #[derive(Debug, Deserialize)]
 pub struct CompileRequestHl {
@@ -21,6 +30,14 @@ pub struct CompileRequestHl {
     /// Optional: whether to include debug symbols in compilation
     #[serde(default)]
     pub include_debug: bool,
+
+    /// Environment to use (elements or bitcoin)
+    #[serde(default = "default_environment")]
+    pub environment: Environment,
+}
+
+fn default_environment() -> Environment {
+    Environment::Elements
 }
 
 #[derive(Debug, Serialize)]
@@ -43,12 +60,80 @@ pub struct Witness {
 pub async fn compile_handler(
     Json(req): Json<CompileRequestHl>,
 ) -> Result<Json<CompileResponseHl>, (StatusCode, String)> {
+    match req.environment {
+        Environment::Elements => compile_with_elements(req).await,
+        Environment::Bitcoin => compile_with_bitcoin(req).await,
+    }
+}
+
+async fn compile_with_elements(
+    req: CompileRequestHl,
+) -> Result<Json<CompileResponseHl>, (StatusCode, String)> {
     let script = req.script;
     let include_debug = req.include_debug;
 
-    let args = simplicityhl::Arguments::default();
+    let args = simplicityhl::Arguments::<ElementsExtension>::default();
 
-    let compiled = simplicityhl::CompiledProgram::new(script, args, include_debug)
+    let compiled =
+        simplicityhl::CompiledProgram::<ElementsExtension>::new(script, args, include_debug)
+            .map_err(|e| (StatusCode::BAD_REQUEST, format!("compile error: {}", e)))?;
+
+    let program_bytes = compiled.commit().to_vec_without_witness();
+
+    let program_b64 = STANDARD.encode(&program_bytes);
+
+    let witness_b64 = if let Some(witness) = req.witness {
+        let mut converted_witness = HashMap::new();
+
+        for (key, value) in witness {
+            let name = WitnessName::from_str_unchecked(key.as_str());
+            let value = Value::parse_from_str(
+                &value.value,
+                &ResolvedType::parse_from_str(value.type_.as_str()).map_err(|e| {
+                    return (
+                        StatusCode::BAD_REQUEST,
+                        format!("value of witness is incorrect: {}", e),
+                    );
+                })?,
+            )
+            .map_err(|e| {
+                return (
+                    StatusCode::BAD_REQUEST,
+                    format!("witness is incorrect: {}", e),
+                );
+            })?;
+
+            converted_witness.insert(name, value);
+        }
+
+        let witness = WitnessValues::from(converted_witness);
+
+        let satisfied = compiled
+            .satisfy(witness)
+            .map_err(|e| (StatusCode::BAD_REQUEST, format!("satisfy error: {}", e)))?;
+
+        let (_, witness_bytes) = satisfied.redeem().to_vec_with_witness();
+
+        Some(STANDARD.encode(&witness_bytes))
+    } else {
+        None
+    };
+
+    Ok(Json(CompileResponseHl {
+        program_base64: program_b64,
+        witness_base64: witness_b64,
+    }))
+}
+
+async fn compile_with_bitcoin(
+    req: CompileRequestHl,
+) -> Result<Json<CompileResponseHl>, (StatusCode, String)> {
+    let script = req.script;
+    let include_debug = req.include_debug;
+
+    let args = simplicityhl::Arguments::<CoreExtension>::default();
+
+    let compiled = simplicityhl::CompiledProgram::<CoreExtension>::new(script, args, include_debug)
         .map_err(|e| (StatusCode::BAD_REQUEST, format!("compile error: {}", e)))?;
 
     let program_bytes = compiled.commit().to_vec_without_witness();
@@ -115,6 +200,7 @@ async fn compile_hl_roundtrip_produces_same_program_bytes() {
         script: script.clone(),
         witness: Some(witness_map),
         include_debug: false,
+        environment: Environment::Elements,
     };
 
     let result = compile_handler(Json(req))
@@ -127,9 +213,9 @@ async fn compile_hl_roundtrip_produces_same_program_bytes() {
         .decode(&response.program_base64)
         .expect("base64 decode failed");
 
-    let compiled = simplicityhl::CompiledProgram::new(
+    let compiled = simplicityhl::CompiledProgram::<ElementsExtension>::new(
         script,
-        simplicityhl::Arguments::default(),
+        simplicityhl::Arguments::<ElementsExtension>::default(),
         /* include_debug = */ false,
     )
     .expect("CompiledProgram::new failed");

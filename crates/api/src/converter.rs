@@ -3,7 +3,7 @@ use axum::{extract::Json, http::StatusCode};
 use serde::{Deserialize, Serialize};
 
 use elements::opcodes::all;
-use elements::{Address, AddressParams, script::Builder};
+use elements::{Address, AddressParams, bitcoin, script::Builder};
 
 #[derive(Deserialize)]
 pub struct CompileRequest {
@@ -217,16 +217,82 @@ pub fn parse_human_readable(input: &str, network: String) -> Result<(Vec<u8>, St
 
     let script = builder.into_script();
 
-    let address_params = match network.as_str() {
-        "liquid" => &AddressParams::LIQUID,
-        "liquid_testnet" => &AddressParams::LIQUID_TESTNET,
-        "elements" => &AddressParams::ELEMENTS,
-        _ => return Err(anyhow!("Unexpected network")),
-    };
+    // Try Elements networks first
+    if let Ok(network_type) = ElementsNetwork::try_from(network.as_str()) {
+        let params = match network_type {
+            ElementsNetwork::Elements => &AddressParams::ELEMENTS,
+            ElementsNetwork::Liquid => &AddressParams::LIQUID,
+            ElementsNetwork::LiquidTestnet => &AddressParams::LIQUID_TESTNET,
+        };
 
-    let address = Address::p2wsh(&script, None, address_params);
+        let address = Address::p2wsh(&script, None, params);
+        return Ok((script.into_bytes(), address.to_string()));
+    }
 
-    Ok((script.into_bytes(), address.to_string()))
+    // Try Bitcoin networks
+    if let Ok(network_type) = BitcoinNetwork::try_from(network.as_str()) {
+        let network_params = match network_type {
+            BitcoinNetwork::Bitcoin => bitcoin::Network::Bitcoin,
+            BitcoinNetwork::Testnet => bitcoin::Network::Testnet,
+            BitcoinNetwork::Testnet4 => bitcoin::Network::Testnet4,
+            BitcoinNetwork::Signet => bitcoin::Network::Signet,
+            BitcoinNetwork::Regtest => bitcoin::Network::Regtest,
+        };
+
+        // Convert elements script to bitcoin script
+        let bitcoin_script = bitcoin::ScriptBuf::from_bytes(script.into_bytes());
+        let address = bitcoin::address::Address::p2wsh(&bitcoin_script, network_params);
+        return Ok((bitcoin_script.into_bytes(), address.to_string()));
+    }
+
+    Err(anyhow!(
+        "Unsupported network: {}. Supported networks are elements, liquid, liquid_testnet, bitcoin, testnet, testnet4, signet, regtest",
+        network
+    ))
+}
+
+#[derive(Debug)]
+enum ElementsNetwork {
+    Elements,
+    Liquid,
+    LiquidTestnet,
+}
+
+impl TryFrom<&str> for ElementsNetwork {
+    type Error = anyhow::Error;
+
+    fn try_from(s: &str) -> Result<Self, Self::Error> {
+        match s {
+            "elements" => Ok(ElementsNetwork::Elements),
+            "liquid" => Ok(ElementsNetwork::Liquid),
+            "liquid_testnet" => Ok(ElementsNetwork::LiquidTestnet),
+            _ => Err(anyhow::anyhow!("Unsupported elements network: {}", s)),
+        }
+    }
+}
+
+#[derive(Debug)]
+enum BitcoinNetwork {
+    Bitcoin,
+    Testnet,
+    Testnet4,
+    Signet,
+    Regtest,
+}
+
+impl TryFrom<&str> for BitcoinNetwork {
+    type Error = anyhow::Error;
+
+    fn try_from(s: &str) -> Result<Self, Self::Error> {
+        match s {
+            "bitcoin" => Ok(BitcoinNetwork::Bitcoin),
+            "testnet" => Ok(BitcoinNetwork::Testnet),
+            "testnet4" => Ok(BitcoinNetwork::Testnet4),
+            "signet" => Ok(BitcoinNetwork::Signet),
+            "regtest" => Ok(BitcoinNetwork::Regtest),
+            _ => Err(anyhow::anyhow!("Unsupported bitcoin network: {}", s)),
+        }
+    }
 }
 
 #[test]
