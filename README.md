@@ -298,52 +298,12 @@ curl -s -X POST "http://localhost:3001/simplicity-unchained-web-proxy-demo/final
 }
 ```
 
----
-
-### Generate Keypair
-Generates a random secp256k1 keypair (Secret Key and Compressed Public Key).
-
-**Endpoint:** `POST /simplicity-unchained-web-proxy-demo/generate`
-
-#### Request
-```bash
-curl -X POST http://localhost:3001/simplicity-unchained-web-proxy-demo/generate \
-   -H "Content-Type: application/json" \
-   -d '{}'
-```
-
 ### Response
 ```
 {
   "compressed": true,
   "public_key": "03db8804e872ee79bb2b8b014f60530c448eaa108cb2582794a817e9d30aaf21ff",
   "secret_key": "777427aa93677f5e3e31edc8137884162593bb796e6eb84f99fb0c92dbb8e993"
-}
-```
-
----
-
-### Sign message
-Signs a received message hex.
-
-**Endpoint:** `POST /simplicity-unchained-web-proxy-demo/sign_message`
-
-#### Request
-```bash
-curl -X POST http://localhost:3001/simplicity-unchained-web-proxy-demo/sign_message \
-  -H "Content-Type: application/json" \
-  -d '{
-    "message": "68656C6C6F",
-    "secret_key_hex": "0000000000000000000000000000000000000000000000000000000000000001"
-  }'
-```
-
-#### Response
-```json
-{
-  "digest_hex":"2cf24dba5fb0a30e26e83b2ac5b9e29e1b161e5c1fa7425e73043362938b9824",
-  "public_key_hex":"0279be667ef9dcbbac55a06295ce870b07029bfcdb2dce28d959f2815b16f81798",
-  "signature_hex":"06deab6fea971fa304c7a2d80e2fbc00db83d6f68261180264d613ada63a9c29046fb1f6e8728abf33d42e46027e49e615b8aad9704e8e4cf71d11237df8424b"
 }
 ```
 

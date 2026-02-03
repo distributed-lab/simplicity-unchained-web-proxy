@@ -5,7 +5,5 @@ pub mod create;
 pub mod create_psbt;
 pub mod finalize_psbt;
 pub mod finilize;
-pub mod generate;
 pub mod sign;
-pub mod sign_message;
 pub mod sign_psbt;
