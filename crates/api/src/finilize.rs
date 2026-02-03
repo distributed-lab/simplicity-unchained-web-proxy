@@ -4,6 +4,7 @@ use elements::{
     bitcoin::PublicKey,
     encode::{deserialize, serialize},
     pset::PartiallySignedTransaction,
+    script::Script,
 };
 use reqwest::StatusCode;
 use serde::Deserialize;
@@ -12,21 +13,64 @@ use serde_json::{Value, json};
 #[derive(Deserialize)]
 pub struct FinalizeRequest {
     pub pset_hex: String,
+    pub redeem_script_hex: String,
+    pub input_index: usize,
+    pub signature_hex: String,
+    pub public_key_hex: String,
 }
 
 pub async fn finalize_handler(
     Json(payload): Json<FinalizeRequest>,
 ) -> Result<Json<Value>, (StatusCode, String)> {
-    match execute(&payload.pset_hex) {
+    match execute(
+        &payload.pset_hex,
+        &payload.redeem_script_hex,
+        payload.input_index,
+        &payload.signature_hex,
+        &payload.public_key_hex,
+    ) {
         Ok(output) => Ok(Json(output)),
         Err(e) => Err((StatusCode::BAD_REQUEST, e.to_string())),
     }
 }
 
-pub fn execute(pset_hex: &str) -> Result<serde_json::Value> {
+pub fn execute(
+    pset_hex: &str,
+    redeem_script_hex: &str,
+    input_index: usize,
+    signature_hex: &str,
+    public_key_hex: &str,
+) -> Result<serde_json::Value> {
     let pset_bytes = hex::decode(pset_hex).context("Failed to decode PSET hex")?;
-    let pset: PartiallySignedTransaction =
+    let mut pset: PartiallySignedTransaction =
         deserialize(&pset_bytes).context("Failed to deserialize PSET")?;
+
+    if input_index >= pset.inputs().len() {
+        return Err(anyhow::anyhow!(
+            "Input index {} out of bounds (PSET has {} inputs)",
+            input_index,
+            pset.inputs().len()
+        ));
+    }
+
+    // Decode and add the last signer's signature
+    let public_key_bytes =
+        hex::decode(public_key_hex).context("Failed to decode public key hex")?;
+    let public_key = PublicKey::from_slice(&public_key_bytes).context("Invalid public key")?;
+
+    let sig_bytes = hex::decode(signature_hex).context("Failed to decode signature hex")?;
+
+    let redeem_script_bytes =
+        hex::decode(redeem_script_hex).context("Failed to decode redeem script hex")?;
+    let redeem_script = Script::from(redeem_script_bytes);
+
+    // Add the last signature and witness script to PSET
+    let input = &mut pset.inputs_mut()[input_index];
+    input.partial_sigs.insert(public_key, sig_bytes);
+
+    if input.witness_script.is_none() {
+        input.witness_script = Some(redeem_script);
+    }
 
     let mut tx = pset
         .extract_tx()

@@ -1,6 +1,6 @@
 use anyhow::{Context, Result};
 use axum::Json;
-use elements::bitcoin::{PublicKey, psbt::Psbt};
+use elements::bitcoin::{PublicKey, ScriptBuf, psbt::Psbt};
 use reqwest::StatusCode;
 use serde::Deserialize;
 use serde_json::{Value, json};
@@ -8,20 +8,79 @@ use serde_json::{Value, json};
 #[derive(Deserialize)]
 pub struct FinalizePsbtRequest {
     pub psbt_hex: String,
+    pub redeem_script_hex: String,
+    pub input_index: usize,
+    pub signature_hex: String,
+    pub public_key_hex: String,
 }
 
 pub async fn finalize_psbt_handler(
     Json(payload): Json<FinalizePsbtRequest>,
 ) -> Result<Json<Value>, (StatusCode, String)> {
-    match execute(&payload.psbt_hex) {
+    match execute(
+        &payload.psbt_hex,
+        &payload.redeem_script_hex,
+        payload.input_index,
+        &payload.signature_hex,
+        &payload.public_key_hex,
+    ) {
         Ok(output) => Ok(Json(output)),
         Err(e) => Err((StatusCode::BAD_REQUEST, e.to_string())),
     }
 }
 
-pub fn execute(psbt_hex: &str) -> Result<serde_json::Value> {
+pub fn execute(
+    psbt_hex: &str,
+    redeem_script_hex: &str,
+    input_index: usize,
+    signature_hex: &str,
+    public_key_hex: &str,
+) -> Result<serde_json::Value> {
     let psbt_bytes = hex::decode(psbt_hex).context("Failed to decode PSBT hex")?;
-    let psbt: Psbt = Psbt::deserialize(&psbt_bytes).context("Failed to deserialize PSBT")?;
+    let mut psbt: Psbt = Psbt::deserialize(&psbt_bytes).context("Failed to deserialize PSBT")?;
+
+    if input_index >= psbt.inputs.len() {
+        return Err(anyhow::anyhow!(
+            "Input index {} out of bounds (PSBT has {} inputs)",
+            input_index,
+            psbt.inputs.len()
+        ));
+    }
+
+    // Decode and add the last signer's signature
+    let public_key_bytes =
+        hex::decode(public_key_hex).context("Failed to decode public key hex")?;
+    let public_key = PublicKey::from_slice(&public_key_bytes).context("Invalid public key")?;
+
+    let sig_bytes = hex::decode(signature_hex).context("Failed to decode signature hex")?;
+
+    // Parse the signature (DER format + sighash byte)
+    if sig_bytes.is_empty() {
+        return Err(anyhow::anyhow!("Signature is empty"));
+    }
+
+    let sighash_byte = sig_bytes[sig_bytes.len() - 1];
+    let der_sig = &sig_bytes[..sig_bytes.len() - 1];
+
+    let signature = elements::secp256k1_zkp::ecdsa::Signature::from_der(der_sig)
+        .context("Failed to parse DER signature")?;
+
+    let bitcoin_sig = elements::bitcoin::ecdsa::Signature {
+        signature,
+        sighash_type: elements::bitcoin::EcdsaSighashType::from_consensus(sighash_byte as u32),
+    };
+
+    let redeem_script_bytes =
+        hex::decode(redeem_script_hex).context("Failed to decode redeem script hex")?;
+    let redeem_script = ScriptBuf::from_bytes(redeem_script_bytes);
+
+    // Add the last signature and witness script to PSBT
+    let input = &mut psbt.inputs[input_index];
+    input.partial_sigs.insert(public_key, bitcoin_sig);
+
+    if input.witness_script.is_none() {
+        input.witness_script = Some(redeem_script);
+    }
 
     let mut tx = psbt.clone().extract_tx_unchecked_fee_rate();
 

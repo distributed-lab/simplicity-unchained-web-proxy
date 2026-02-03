@@ -146,18 +146,17 @@ curl -s -X POST "http://localhost:3001/simplicity-unchained-web-proxy-demo/creat
 
 ---
 
-### Sign PSBT (Bitcoin)
-Signs a Bitcoin PSBT input with a private key. This endpoint calculates the SegWit v0 sighash for the specified input, generates an ECDSA signature, and attaches it to the PSBT.
+### Sighash PSBT (Bitcoin)
+Computes the SegWit v0 sighash for a specific PSBT input. Returns the message that needs to be signed externally with a private key.
 
-**Endpoint:** `POST /simplicity-unchained-web-proxy-demo/sign-psbt`
+**Endpoint:** `POST /simplicity-unchained-web-proxy-demo/sighash-psbt`
 
 #### Request
 ```bash
-curl -s -X POST "http://localhost:3001/simplicity-unchained-web-proxy-demo/sign-psbt" \
+curl -s -X POST "http://localhost:3001/simplicity-unchained-web-proxy-demo/sighash-psbt" \
   -H "Content-Type: application/json" \
   -d '{
   "psbt_hex": "cHNidP8BAH...",
-  "secret_key_hex": "804622cda0d8e634317a12651d91751ceff5c081f2b5f63ef7912725c7275e5d",
   "input_index": 0,
   "redeem_script_hex": "5221033523982d58e94be3b735731593f8225043880d53727235b566c515d24a0f7baf21034f355bdcb7cc0af728ef3cceb9615d90684bb5b2ca5f859ab0f0b704075871aa52ae"
 }'
@@ -166,18 +165,17 @@ curl -s -X POST "http://localhost:3001/simplicity-unchained-web-proxy-demo/sign-
 #### Response
 ```json
 {
+  "sighash_hex": "a1b2c3d4e5f6...",
+  "message_hex": "a1b2c3d4e5f6...",
   "input_index": 0,
-  "partial_sigs_count": 1,
-  "psbt": "cHNidP8BAH...",
-  "public_key_hex": "033523982d58e94be3b735731593f8225043880d53727235b566c515d24a0f7baf",
-  "signature_hex": "3044..."
+  "sighash_type": "SIGHASH_ALL"
 }
 ```
 
 ---
 
 ### Finalize PSBT (Bitcoin)
-Takes a fully signed Bitcoin PSBT, validates the signatures, and constructs the final witness data (specifically for 2-of-2 multisig inputs). It extracts the raw, broadcast-ready transaction hex.
+Adds the final signature to a Bitcoin PSBT, validates all signatures, and constructs the final witness data (specifically for 2-of-2 multisig inputs). It extracts the raw, broadcast-ready transaction hex. The PSBT must already contain the first signature before calling this endpoint.
 
 **Endpoint:** `POST /simplicity-unchained-web-proxy-demo/finalize-psbt`
 
@@ -186,7 +184,11 @@ Takes a fully signed Bitcoin PSBT, validates the signatures, and constructs the 
 curl -s -X POST "http://localhost:3001/simplicity-unchained-web-proxy-demo/finalize-psbt" \
   -H "Content-Type: application/json" \
   -d '{
-  "psbt_hex": "0x00"
+  "psbt_hex": "0x00...",
+  "redeem_script_hex": "5221033523982d58e94be3b735731593f8225043880d53727235b566c515d24a0f7baf21034f355bdcb7cc0af728ef3cceb9615d90684bb5b2ca5f859ab0f0b704075871aa52ae",
+  "input_index": 0,
+  "signature_hex": "3044022030535235414d40273b6346e3ec140112ad1abd8e8dfdda45830f548c453a213b02205696cf8dd689c0789e10a48642e48da6cc8671ee4788f8ea0623960bc720408001",
+  "public_key_hex": "034f355bdcb7cc0af728ef3cceb9615d90684bb5b2ca5f859ab0f0b704075871aa"
 }'
 ```
 
@@ -238,18 +240,17 @@ curl -s -X POST "http://localhost:3001/simplicity-unchained-web-proxy-demo/creat
 ```
 
 ---
-### Sign PSET (Elements)
-Signs a PSET input with a private key. This endpoint calculates the SegWit v0 sighash for the specified input, generates an ECDSA signature, and attaches it to the PSET.
+### Sighash PSET (Elements)
+Computes the SegWit v0 sighash for a specific PSET input. Returns the message that needs to be signed externally with a private key.
 
-**Endpoint:** `POST /simplicity-unchained-web-proxy-demo/sign-pset`
+**Endpoint:** `POST /simplicity-unchained-web-proxy-demo/sighash-pset`
 
 #### Request
 ```bash
-curl -s -X POST "http://localhost:3001/simplicity-unchained-web-proxy-demo/sign-pset" \
+curl -s -X POST "http://localhost:3001/simplicity-unchained-web-proxy-demo/sighash-pset" \
   -H "Content-Type: application/json" \
   -d '{
   "pset_hex": "70736574ff0102040200000001030400000000010401010105010201fb04020000000001014e01499a818545f6bae39fc03b637f2a4e1e64e590cac1bc3a6f6d71aa4443654c140100000000000186a00022002044797b3c6ab4c6a96827a18046ea63571a13668b2c8dc84a82a55daf6dafcee601070001080100010e2045a122398dd5a6c52171788b566091504e33af66d3f90f02c3d5ac50209739f5010f0400000000011004ffffffff00010308b88201000000000007fc04707365740220499a818545f6bae39fc03b637f2a4e1e64e590cac1bc3a6f6d71aa4443654c14010422002044797b3c6ab4c6a96827a18046ea63571a13668b2c8dc84a82a55daf6dafcee600010308e80300000000000007fc04707365740220499a818545f6bae39fc03b637f2a4e1e64e590cac1bc3a6f6d71aa4443654c1401040000",
-  "secret_key_hex": "804622cda0d8e634317a12651d91751ceff5c081f2b5f63ef7912725c7275e5d",
   "input_index": 0,
   "redeem_script_hex": "5221033523982d58e94be3b735731593f8225043880d53727235b566c515d24a0f7baf21034f355bdcb7cc0af728ef3cceb9615d90684bb5b2ca5f859ab0f0b704075871aa52ae"
 }'
@@ -258,17 +259,17 @@ curl -s -X POST "http://localhost:3001/simplicity-unchained-web-proxy-demo/sign-
 #### Response
 ```json
 {
-  "input_index":0,
-  "partial_sigs_count":1,
-  "pset":"70736574ff0102040200000001030400000000010401010105010201fb04020000000001014e01499a818545f6bae39fc03b637f2a4e1e64e590cac1bc3a6f6d71aa4443654c140100000000000186a00022002044797b3c6ab4c6a96827a18046ea63571a13668b2c8dc84a82a55daf6dafcee62202033523982d58e94be3b735731593f8225043880d53727235b566c515d24a0f7baf473044022030535235414d40273b6346e3ec140112ad1abd8e8dfdda45830f548c453a213b02205696cf8dd689c0789e10a48642e48da6cc8671ee4788f8ea0623960bc7204080010105475221033523982d58e94be3b735731593f8225043880d53727235b566c515d24a0f7baf21034f355bdcb7cc0af728ef3cceb9615d90684bb5b2ca5f859ab0f0b704075871aa52ae01070001080100010e2045a122398dd5a6c52171788b566091504e33af66d3f90f02c3d5ac50209739f5010f0400000000011004ffffffff00010308b88201000000000007fc04707365740220499a818545f6bae39fc03b637f2a4e1e64e590cac1bc3a6f6d71aa4443654c14010422002044797b3c6ab4c6a96827a18046ea63571a13668b2c8dc84a82a55daf6dafcee600010308e80300000000000007fc04707365740220499a818545f6bae39fc03b637f2a4e1e64e590cac1bc3a6f6d71aa4443654c1401040000",
-  "public_key_hex":"033523982d58e94be3b735731593f8225043880d53727235b566c515d24a0f7baf",
-  "signature_hex":"3044022030535235414d40273b6346e3ec140112ad1abd8e8dfdda45830f548c453a213b02205696cf8dd689c0789e10a48642e48da6cc8671ee4788f8ea0623960bc720408001"}
+  "sighash_hex": "a1b2c3d4e5f6...",
+  "message_hex": "a1b2c3d4e5f6...",
+  "input_index": 0,
+  "sighash_type": "SIGHASH_ALL"
+}
 ```
 
 ---
 
 ### Finalize PSET (Elements)
-Takes a fully signed PSET, validates the signatures, and constructs the final witness data (specifically for 2-of-2 multisig inputs). It extracts the raw, broadcast-ready transaction hex.
+Adds the final signature to a PSET, validates all signatures, and constructs the final witness data (specifically for 2-of-2 multisig inputs). It extracts the raw, broadcast-ready transaction hex. The PSET must already contain the first signature before calling this endpoint.
 
 **Endpoint:** `POST /simplicity-unchained-web-proxy-demo/finalize`
 
@@ -277,7 +278,11 @@ Takes a fully signed PSET, validates the signatures, and constructs the final wi
 curl -s -X POST "http://localhost:3001/simplicity-unchained-web-proxy-demo/finalize" \
   -H "Content-Type: application/json" \
   -d '{
-  "pset_hex": "70736574ff0102040200000001030400000000010401010105010201fb04020000000001014e01499a818545f6bae39fc03b637f2a4e1e64e590cac1bc3a6f6d71aa4443654c140100000000000186a00022002044797b3c6ab4c6a96827a18046ea63571a13668b2c8dc84a82a55daf6dafcee62202033523982d58e94be3b735731593f8225043880d53727235b566c515d24a0f7baf473044022030535235414d40273b6346e3ec140112ad1abd8e8dfdda45830f548c453a213b02205696cf8dd689c0789e10a48642e48da6cc8671ee4788f8ea0623960bc7204080012202034f355bdcb7cc0af728ef3cceb9615d90684bb5b2ca5f859ab0f0b704075871aa47304402207f6a25942703dfe84eb7ca826d40f2cdd3726ae54281e7d035ef0524bf37b545022074404b9cd4230c2483195670e4705c628e04d9132e6f1c403304dd8481d45a9e010105475221033523982d58e94be3b735731593f8225043880d53727235b566c515d24a0f7baf21034f355bdcb7cc0af728ef3cceb9615d90684bb5b2ca5f859ab0f0b704075871aa52ae01070001080100010e2045a122398dd5a6c52171788b566091504e33af66d3f90f02c3d5ac50209739f5010f0400000000011004ffffffff00010308b88201000000000007fc04707365740220499a818545f6bae39fc03b637f2a4e1e64e590cac1bc3a6f6d71aa4443654c14010422002044797b3c6ab4c6a96827a18046ea63571a13668b2c8dc84a82a55daf6dafcee600010308e80300000000000007fc04707365740220499a818545f6bae39fc03b637f2a4e1e64e590cac1bc3a6f6d71aa4443654c1401040000"
+  "pset_hex": "70736574ff0102040200000001030400000000010401010105010201fb04020000000001014e01499a818545f6bae39fc03b637f2a4e1e64e590cac1bc3a6f6d71aa4443654c140100000000000186a00022002044797b3c6ab4c6a96827a18046ea63571a13668b2c8dc84a82a55daf6dafcee62202033523982d58e94be3b735731593f8225043880d53727235b566c515d24a0f7baf473044022030535235414d40273b6346e3ec140112ad1abd8e8dfdda45830f548c453a213b02205696cf8dd689c0789e10a48642e48da6cc8671ee4788f8ea0623960bc7204080010105475221033523982d58e94be3b735731593f8225043880d53727235b566c515d24a0f7baf21034f355bdcb7cc0af728ef3cceb9615d90684bb5b2ca5f859ab0f0b704075871aa52ae01070001080100010e2045a122398dd5a6c52171788b566091504e33af66d3f90f02c3d5ac50209739f5010f0400000000011004ffffffff00010308b88201000000000007fc04707365740220499a818545f6bae39fc03b637f2a4e1e64e590cac1bc3a6f6d71aa4443654c14010422002044797b3c6ab4c6a96827a18046ea63571a13668b2c8dc84a82a55daf6dafcee600010308e80300000000000007fc04707365740220499a818545f6bae39fc03b637f2a4e1e64e590cac1bc3a6f6d71aa4443654c1401040000",
+  "redeem_script_hex": "5221033523982d58e94be3b735731593f8225043880d53727235b566c515d24a0f7baf21034f355bdcb7cc0af728ef3cceb9615d90684bb5b2ca5f859ab0f0b704075871aa52ae",
+  "input_index": 0,
+  "signature_hex": "304402207f6a25942703dfe84eb7ca826d40f2cdd3726ae54281e7d035ef0524bf37b545022074404b9cd4230c2483195670e4705c628e04d9132e6f1c403304dd8481d45a9e01",
+  "public_key_hex": "034f355bdcb7cc0af728ef3cceb9615d90684bb5b2ca5f859ab0f0b704075871aa"
 }'
 ```
 

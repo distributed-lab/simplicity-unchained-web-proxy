@@ -5,5 +5,5 @@ pub mod create;
 pub mod create_psbt;
 pub mod finalize_psbt;
 pub mod finilize;
-pub mod sign;
-pub mod sign_psbt;
+pub mod sighash;
+pub mod sighash_psbt;

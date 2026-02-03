@@ -7,7 +7,7 @@ use serde::Deserialize;
 use crate::{
     compiler::compile_handler, converter::convert_handler, create::create_pset_handler,
     create_psbt::create_psbt_handler, finalize_psbt::finalize_psbt_handler,
-    finilize::finalize_handler, sign::sign_pset_handler, sign_psbt::sign_psbt_handler,
+    finilize::finalize_handler, sighash::sighash_pset_handler, sighash_psbt::sighash_psbt_handler,
 };
 
 #[derive(Debug, Deserialize, Clone)]
@@ -31,8 +31,8 @@ pub async fn define_routes(config: Config) -> Result<()> {
             post(create_pset_handler),
         )
         .route(
-            "/simplicity-unchained-web-proxy-demo/sign-pset",
-            post(sign_pset_handler),
+            "/simplicity-unchained-web-proxy-demo/sighash-pset",
+            post(sighash_pset_handler),
         )
         .route(
             "/simplicity-unchained-web-proxy-demo/finalize",
@@ -43,8 +43,8 @@ pub async fn define_routes(config: Config) -> Result<()> {
             post(create_psbt_handler),
         )
         .route(
-            "/simplicity-unchained-web-proxy-demo/sign-psbt",
-            post(sign_psbt_handler),
+            "/simplicity-unchained-web-proxy-demo/sighash-psbt",
+            post(sighash_psbt_handler),
         )
         .route(
             "/simplicity-unchained-web-proxy-demo/finalize-psbt",
